@@ -1,0 +1,883 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>How to Make a Sandcastle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: beach "video" stage on the left (sticky on phones), lesson panel on the right, word chips under the stage */
+:root{
+  --ink:#13264A; --ink2:#3C5378; --coral:#FF5B6E; --coralD:#E23A55; --sun:#FFC42E;
+  --sea:#0FB5E8; --mint:#14C79A; --mintBg:#E3FFF4; --red:#FF3355; --redBg:#FFEFF2;
+  --card:#FFFFFF; --line:#DCEBF6; --bg:#5CD3FF;
+  --display:'Lilita One','Arial Rounded MT Bold','Trebuchet MS',system-ui,sans-serif;
+  --body:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+}
+html{min-height:100%}
+body{
+  min-height:100%;
+  background:var(--bg) linear-gradient(180deg,#22BDFF 0%,#79DBFF 40%,#FFE7A0 100%);
+  color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.45;
+  padding-block:16px 40px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:#22BDFF}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* header */
+.top{max-width:1280px;margin:0 auto 16px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px}
+.kicker{margin:0 0 6px;font-weight:900;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(30px,4.6vw,52px);line-height:.95;color:#fff;letter-spacing:.01em;text-shadow:0 3px 0 var(--ink),0 6px 18px rgba(19,38,74,.25);text-wrap:balance}
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.steps{list-style:none;margin:0;display:flex;gap:6px;background:rgba(255,255,255,.4);padding:6px;border-radius:999px}
+.steps li{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:14px;background:#fff;color:var(--ink2);transition:transform .25s,background .25s}
+.steps li.now{background:var(--coral);color:#fff;transform:scale(1.1)}
+.steps li.done{background:var(--mint);color:#fff}
+.pill{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:999px;background:#fff;border:0;font-weight:900;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.pill svg{width:18px;height:18px}
+.tog{cursor:pointer;box-shadow:0 3px 0 rgba(19,38,74,.18)}
+.tog[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+/* grid */
+.game{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-areas:"stage panel" "words panel";gap:18px;align-items:start}
+.stage{grid-area:stage;position:relative;aspect-ratio:5/3;max-width:100%;border-radius:28px;overflow:hidden;border:4px solid #fff;background:#8BE6FF;box-shadow:0 22px 44px -22px rgba(19,38,74,.6)}
+.stage svg{display:block;width:100%;height:100%}
+.caption{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:calc(100% - 24px);width:max-content;background:rgba(19,38,74,.88);color:#fff;font-weight:800;font-size:clamp(13px,1.55vw,18px);line-height:1.3;padding:8px 16px;border-radius:999px;text-align:center;box-shadow:0 6px 16px rgba(19,38,74,.25)}
+.stamp{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.stamp span{width:min(24%,132px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:var(--mint);box-shadow:0 0 0 8px rgba(255,255,255,.75),0 14px 30px rgba(19,38,74,.3)}
+.stamp.bad span{background:var(--red)}
+.stamp svg{width:55%;height:55%}
+#confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#confetti i{position:absolute;top:0;width:9px;height:14px;border-radius:2px}
+
+/* panel */
+.panel{grid-area:panel;background:var(--card);border-radius:28px;padding:clamp(18px,2.4vw,28px);display:flex;flex-direction:column;gap:16px;box-shadow:0 22px 44px -24px rgba(19,38,74,.55)}
+.eyebrow{font-weight:900;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--coral)}
+h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(30px,3.4vw,42px);line-height:1;color:var(--ink);text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--ink2);font-weight:700}
+.q{display:flex;align-items:center;gap:12px;font-size:clamp(17px,1.6vw,20px);font-weight:800}
+.q p{margin:0}
+.say{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:#E3F6FF;color:#0A86C8;display:grid;place-items:center;cursor:pointer;transition:transform .15s,background .15s}
+.say:hover{background:#C9EEFF;transform:scale(1.06)}
+.say svg{width:22px;height:22px}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opt{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:12px;width:100%;min-height:78px;padding:10px 14px 10px 10px;text-align:left;cursor:pointer;background:#fff;border:3px solid var(--line);border-radius:20px;box-shadow:0 4px 0 var(--line);transition:transform .15s,border-color .15s,box-shadow .15s,opacity .2s,filter .2s}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--sea);box-shadow:0 6px 0 #9FDDF5}
+.opt:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.opt:disabled{cursor:default}
+.letter{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--ink);color:#fff;font-family:var(--display);font-size:20px}
+.opt .ico svg{width:56px;height:56px;display:block}
+.otext{min-width:0}
+.otext b{display:block;font-size:17px;font-weight:800;line-height:1.25}
+.opt.playing{border-color:var(--sun);box-shadow:0 0 0 5px rgba(255,196,46,.4)}
+.opt.wrong{border-color:var(--red);box-shadow:0 0 0 4px rgba(255,51,85,.2);background:var(--redBg);opacity:.62;filter:grayscale(.35)}
+.opt.wrong .letter{background:var(--red)}
+.opt.right{border-color:var(--mint);background:var(--mintBg);box-shadow:0 0 0 5px rgba(20,199,154,.25)}
+.opt.right .letter{background:var(--mint)}
+.opt.wrong:not(:disabled):hover{opacity:.9;filter:none}
+.next:disabled{opacity:.5;cursor:default}
+.fb{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:18px;font-weight:800;font-size:17px;line-height:1.35}
+.fb p{margin:0}
+.fb.bad{background:var(--redBg);color:#8F0F2A}
+.fb.good{background:var(--mintBg);color:#0B6B52}
+.fb .mark{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.fb .mark svg{width:20px;height:20px}
+.fb.bad .mark{background:var(--red)}
+.fb.good .mark{background:var(--mint)}
+.fb .grow{flex:1;min-width:0}
+.fb .say{width:36px;height:36px;background:#fff}
+.next{border:0;border-radius:999px;background:var(--coral);color:#fff;font-family:var(--display);font-size:22px;letter-spacing:.02em;padding:16px 24px;cursor:pointer;box-shadow:0 6px 0 var(--coralD);transition:transform .15s,box-shadow .15s}
+.next:hover{transform:translateY(-2px);box-shadow:0 8px 0 var(--coralD)}
+.next:active{transform:translateY(3px);box-shadow:0 2px 0 var(--coralD)}
+.hint{margin:0;font-size:14px;color:var(--ink2);font-weight:700}
+.score{margin:0;font-size:18px;font-weight:800}
+.recap ol{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:r}
+.recap li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#F3FAFF;font-weight:800;counter-increment:r}
+.recap li::before{content:counter(r);flex:none;width:28px;height:28px;border-radius:9px;background:var(--mint);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:400}
+.recap li .t{flex:1;min-width:0}
+.recap .say{width:34px;height:34px}
+
+/* words */
+.words{grid-area:words;background:rgba(255,255,255,.78);border-radius:24px;padding:14px 16px 16px}
+.label{font-weight:900;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 14px 6px 8px;border:0;border-radius:14px;background:#fff;cursor:pointer;font-weight:800;font-size:16px;box-shadow:0 3px 0 var(--line);transition:transform .15s}
+.chip:hover{transform:translateY(-2px)}
+.chip .dotspk{width:30px;height:30px;border-radius:50%;background:#FFF0B8;color:#B07800;display:grid;place-items:center}
+.chip .dotspk svg{width:16px;height:16px}
+
+/* svg scene bits */
+.pin circle{fill:#fff;stroke:var(--ink);stroke-width:3;transition:fill .3s}
+.pin text{fill:var(--ink);font-family:var(--display);font-size:22px}
+.pin .tip{fill:var(--ink)}
+.pin.play circle{fill:var(--sun)}
+.pin.bad circle{fill:var(--red)} .pin.bad text{fill:#fff}
+.pin.good circle{fill:var(--mint)} .pin.good text{fill:#fff}
+.pin-head{transform-box:fill-box;transform-origin:50% 100%;animation:bob 1.8s ease-in-out infinite}
+.sealines{animation:sway 3.6s ease-in-out infinite alternate}
+.cloud{animation:float 16s ease-in-out infinite alternate}
+.cloud.c2{animation-duration:22s}
+.rays{transform-box:fill-box;transform-origin:center;animation:spin 40s linear infinite}
+.foam{stroke-dasharray:16 10;animation:foam 2.6s linear infinite}
+.flag-cloth{transform-box:fill-box;transform-origin:0 50%;animation:flap 1.1s ease-in-out infinite alternate}
+.gull{animation:glide 7s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-7px)}}
+@keyframes sway{from{transform:translateX(-10px)}to{transform:translateX(10px)}}
+@keyframes float{to{transform:translateX(46px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes foam{to{stroke-dashoffset:-52}}
+@keyframes flap{from{transform:skewY(-7deg) scaleX(.92)}to{transform:skewY(6deg) scaleX(1)}}
+@keyframes glide{to{transform:translate(30px,-8px)}}
+
+/* narrow portrait: stage on top and sticky so the "video" is always visible */
+@media (max-width:880px) and (orientation:portrait){
+  .game{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "panel" "words";gap:14px}
+  .stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;border-radius:22px;border-width:3px}
+  .top{align-items:flex-start}
+}
+@media (max-width:520px){
+  .hud{width:100%;justify-content:space-between}
+  .steps li{width:28px;height:28px;font-size:13px}
+  .pill{height:40px;padding:0 12px;font-size:14px}
+  .opt{min-height:70px;gap:10px;padding:8px 10px 8px 8px}
+  .opt .ico svg{width:48px;height:48px}
+  .letter{width:32px;height:32px;font-size:18px}
+  .otext b{font-size:16px}
+}
+/* small landscape phones keep two columns */
+@media (max-height:520px) and (orientation:landscape){
+  .game{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  .pin-head,.sealines,.cloud,.rays,.foam,.flag-cloth,.gull{animation:none}
+}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <p class="kicker">Easy English · Beach game</p>
+    <h1>How to Make a Sandcastle</h1>
+  </div>
+  <div class="hud">
+    <ol class="steps" id="dots" aria-label="Steps"></ol>
+    <span class="pill" id="stars" title="Right on the first try"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z" fill="#FFC42E" stroke="#E0A000" stroke-width="1.2"/></svg><span id="starN">0</span></span>
+    <button class="pill tog" id="voiceBtn" type="button" aria-pressed="true">Voice on</button>
+  </div>
+</header>
+
+<main class="game">
+  <section class="stage" aria-label="Beach scene">
+    <svg id="scene" viewBox="0 0 800 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A sunny beach with the sea on the left">
+      <defs>
+        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14B2FF"/><stop offset="1" stop-color="#C2F4FF"/></linearGradient>
+        <linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0757D6"/><stop offset=".45" stop-color="#09A2EC"/><stop offset="1" stop-color="#2CE2F3"/></linearGradient>
+        <linearGradient id="waveG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0A8FE6"/><stop offset="1" stop-color="#5DEDFA"/></linearGradient>
+        <linearGradient id="beachG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFEBB0"/><stop offset="1" stop-color="#FFC56A"/></linearGradient>
+        <linearGradient id="sandG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFDE96"/><stop offset="1" stop-color="#ECA650"/></linearGradient>
+        <linearGradient id="wetG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E4A961"/><stop offset="1" stop-color="#B9783A"/></linearGradient>
+        <radialGradient id="sunG"><stop offset="0" stop-color="#FFF6B0"/><stop offset="1" stop-color="#FFC42E"/></radialGradient>
+        <pattern id="grain" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="1" fill="#9A5A22" opacity=".28"/><circle cx="10" cy="9" r=".9" fill="#fff" opacity=".5"/><circle cx="7" cy="12" r=".8" fill="#9A5A22" opacity=".22"/></pattern>
+        <pattern id="looseP" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#F8D290"/><circle cx="4" cy="5" r="3.2" fill="#FDE6B8"/><circle cx="12" cy="11" r="2.6" fill="#B97A3A" opacity=".55"/><circle cx="11" cy="3" r="1.5" fill="#B97A3A" opacity=".45"/><circle cx="3" cy="13" r="2" fill="#FDE6B8"/></pattern>
+        <pattern id="packed" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#DFA058"/><circle cx="3" cy="3" r=".9" fill="#8A4B12" opacity=".35"/><circle cx="8" cy="7" r=".8" fill="#fff" opacity=".35"/></pattern>
+        <clipPath id="bclip"><path d="M428,425 L417,345 L503,345 L492,425 Z"/></clipPath>
+        <clipPath id="wbclip"><path d="M-16,0 L-20,-38 L20,-38 L16,0 Z"/></clipPath>
+        <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#13264A"/></marker>
+      </defs>
+
+      <rect x="-300" y="-300" width="1400" height="500" fill="url(#skyG)"/>
+      <g>
+        <g class="rays" stroke="#FFE36E" stroke-width="5" stroke-linecap="round" opacity=".8">
+          <path d="M690,14 V0 M690,130 V144 M632,72 H618 M748,72 H762 M649,31 L639,21 M731,113 L741,123 M731,31 L741,21 M649,113 L639,123"/>
+        </g>
+        <circle cx="690" cy="72" r="40" fill="url(#sunG)"/>
+      </g>
+      <g class="cloud"><g fill="#fff"><ellipse cx="170" cy="70" rx="46" ry="20"/><ellipse cx="200" cy="58" rx="30" ry="22"/><ellipse cx="140" cy="62" rx="24" ry="16"/></g></g>
+      <g class="cloud c2"><g fill="#fff" opacity=".9"><ellipse cx="440" cy="104" rx="38" ry="15"/><ellipse cx="462" cy="94" rx="24" ry="17"/></g></g>
+      <g class="gull" fill="none" stroke="#13264A" stroke-width="2.5" stroke-linecap="round"><path d="M320,58 q8,-8 16,0 q8,-8 16,0"/><path d="M362,80 q6,-6 12,0 q6,-6 12,0"/></g>
+      <path d="M470,192 C530,146 600,148 660,176 C710,146 770,144 830,160 L830,194 L470,194 Z" fill="#FFE5A2"/>
+      <g stroke="#2FA84F" stroke-width="3" stroke-linecap="round" fill="none"><path d="M560,168 l-4,-14 M566,168 l2,-16 M572,168 l7,-12"/><path d="M712,160 l-5,-13 M718,160 l1,-15 M724,160 l6,-11"/></g>
+
+      <rect x="-300" y="188" width="1400" height="520" fill="url(#beachG)"/>
+      <rect x="-300" y="188" width="1400" height="520" fill="url(#grain)" opacity=".7"/>
+      <path d="M265,188 C240,250 215,320 190,400 C175,450 160,520 140,708 L215,708 C232,520 248,450 264,400 C288,320 305,250 325,188 Z" fill="#E7AE63" opacity=".6"/>
+      <path d="M-300,188 L265,188 C240,250 215,320 190,400 C175,450 160,520 140,708 L-300,708 Z" fill="url(#seaG)"/>
+      <path class="foam" d="M265,188 C240,250 215,320 190,400 C175,450 160,520 140,708" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+      <g class="sealines" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55">
+        <path d="M40,230 q14,-8 28,0 q14,-8 28,0"/><path d="M150,262 q12,-7 24,0 q12,-7 24,0"/><path d="M60,320 q14,-8 28,0 q14,-8 28,0"/><path d="M120,390 q12,-7 24,0"/><path d="M20,440 q14,-8 28,0 q14,-8 28,0"/>
+      </g>
+
+      <g transform="translate(772,332)">
+        <path d="M0,0 C-4,-40 -14,-80 -30,-118" fill="none" stroke="#9A6233" stroke-width="11" stroke-linecap="round"/>
+        <g fill="#18B45A"><path d="M-30,-118 C-60,-136 -90,-128 -104,-108 C-80,-118 -56,-116 -30,-112Z"/><path d="M-30,-118 C-10,-146 24,-146 40,-128 C14,-132 -8,-126 -28,-112Z"/><path d="M-30,-118 C-46,-150 -40,-172 -24,-182 C-30,-160 -28,-140 -26,-116Z"/><path d="M-30,-118 C0,-118 24,-100 30,-80 C10,-96 -10,-104 -32,-112Z"/></g>
+        <circle cx="-34" cy="-110" r="5" fill="#8A4B12"/><circle cx="-24" cy="-108" r="5" fill="#8A4B12"/>
+      </g>
+      <g transform="translate(740,458) rotate(-12)"><path d="M0,-14 L4,-4 L14,-3 L6,4 L9,14 L0,8 L-9,14 L-6,4 L-14,-3 L-4,-4 Z" fill="#FF7A59" stroke="#E0533A" stroke-width="1.5"/></g>
+      <g transform="translate(305,472)"><path d="M0,0 L-9,-10 Q0,-17 9,-10 Z" fill="#FFD0DA" stroke="#E07A8A" stroke-width="1.5"/><path d="M0,0 L-4,-13 M0,0 L0,-14 M0,0 L4,-13" stroke="#E07A8A" stroke-width="1.2"/></g>
+
+      <g id="wave" style="opacity:0">
+        <path d="M-700,188 L295,188 C270,250 245,320 220,400 C205,450 190,520 170,708 L-700,708 Z" fill="url(#waveG)" opacity=".94"/>
+        <path d="M295,188 C270,250 245,320 220,400 C205,450 190,520 170,708" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+        <g fill="#fff" opacity=".85"><circle cx="232" cy="352" r="5"/><circle cx="214" cy="420" r="4"/><circle cx="250" cy="300" r="3.5"/><circle cx="204" cy="470" r="5"/></g>
+      </g>
+      <g id="Lspots">
+        <g class="pin" id="pinA"><ellipse cx="240" cy="428" rx="14" ry="4.5" fill="#13264A" opacity=".2"/><g class="pin-head"><path class="tip" d="M231,402 L240,421 L249,402 Z"/><circle cx="240" cy="386" r="20"/><text x="240" y="394" text-anchor="middle">A</text></g></g>
+        <g class="pin" id="pinB"><ellipse cx="460" cy="428" rx="14" ry="4.5" fill="#13264A" opacity=".2"/><g class="pin-head" style="animation-delay:.3s"><path class="tip" d="M451,402 L460,421 L469,402 Z"/><circle cx="460" cy="386" r="20"/><text x="460" y="394" text-anchor="middle">B</text></g></g>
+        <g class="pin" id="pinC"><ellipse cx="690" cy="428" rx="14" ry="4.5" fill="#13264A" opacity=".2"/><g class="pin-head" style="animation-delay:.6s"><path class="tip" d="M681,402 L690,421 L699,402 Z"/><circle cx="690" cy="386" r="20"/><text x="690" y="394" text-anchor="middle">C</text></g></g>
+      </g>
+      <g id="Lcastle"></g>
+      <g id="Lfx"></g>
+    </svg>
+    <div class="caption" id="cap" hidden></div>
+    <div class="stamp" id="stamp" hidden><span></span></div>
+    <div id="confetti"></div>
+  </section>
+
+  <section class="panel" id="panel" aria-live="polite"></section>
+
+  <section class="words" aria-label="New words">
+    <div class="label">New words · tap to listen</div>
+    <div class="chips" id="chips"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const $=s=>document.querySelector(s);
+const svg=$('#scene'), Lc=$('#Lcastle'), Lfx=$('#Lfx'), Lspots=$('#Lspots'), WAVE=$('#wave');
+const GY=425, CX=460;
+const CAM={full:[0,0,800,480],close:[240,200,440,264],wide:[80,150,640,384],final:[180,170,560,336]};
+const F='url(#sandG)', DRY='#FDEBC0', SOUP='#B5793A', SANDC='#E7B06A';
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CROSS='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg>';
+
+/* ---------- helpers ---------- */
+function add(parent,str,before){
+  const d=new DOMParser().parseFromString('<svg xmlns="'+NS+'">'+str+'</svg>','image/svg+xml');
+  const n=document.importNode(d.documentElement.firstElementChild,true);
+  parent.insertBefore(n,before||null); return n;
+}
+function A(el,frames,dur,o){
+  o=o||{}; if(!el||!el.animate) return Promise.resolve();
+  const a=el.animate(frames,{duration:dur,easing:o.ease||'ease-in-out',fill:'forwards',delay:o.delay||0,iterations:o.it||1});
+  return a.finished.catch(()=>{});
+}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function org(el,ox,oy){ if(!el) return; el.style.transformBox='fill-box'; el.style.transformOrigin=ox+' '+oy; }
+const R=Math.random;
+function cap(t){ const c=$('#cap'); if(!t){c.hidden=true;return;} c.textContent=t; c.hidden=false; A(c,[{opacity:0,transform:'translate(-50%,-6px)'},{opacity:1,transform:'translate(-50%,0)'}],260); }
+
+let cam=CAM.full.slice();
+function camera(to,dur){
+  if(RM||!dur){ cam=to.slice(); svg.setAttribute('viewBox',cam.join(' ')); return Promise.resolve(); }
+  const from=cam.slice(), t0=performance.now();
+  return new Promise(res=>{ function f(t){ const k=Math.min(1,(t-t0)/dur); const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; cam=from.map((v,i)=>v+(to[i]-v)*e); svg.setAttribute('viewBox',cam.map(v=>v.toFixed(2)).join(' ')); k<1?requestAnimationFrame(f):res(); } requestAnimationFrame(f); });
+}
+
+/* ---------- drawing ---------- */
+function towerSVG(x,b,wb,wt,h,fill,cls,win){
+  fill=fill||F;
+  const l0=x-wb/2,r0=x+wb/2,l1=x-wt/2,r1=x+wt/2,t=b-h, L=(a,c,k)=>a+(c-a)*k;
+  const body='M'+l0+','+b+' L'+l1+','+t+' L'+r1+','+t+' L'+r0+','+b+' Z';
+  const tw=wt/7, th=Math.max(6,h*.13); let teeth='';
+  for(let i=0;i<4;i++){ teeth+='<rect x="'+(l1+i*2*tw).toFixed(1)+'" y="'+(t-th).toFixed(1)+'" width="'+tw.toFixed(1)+'" height="'+(th+1).toFixed(1)+'" fill="'+fill+'" stroke="#B9783A" stroke-width="2" stroke-linejoin="round"/>'; }
+  let rid=''; [.33,.66].forEach(k=>{ const y=b-h*k, a=L(l0,l1,k)+3, c=L(r0,r1,k)-3; rid+='<path d="M'+a+','+y+' L'+c+','+y+'" stroke="#fff" stroke-opacity=".4" stroke-width="2.5"/><path d="M'+a+','+(y+3)+' L'+c+','+(y+3)+'" stroke="#8A4B12" stroke-opacity=".22" stroke-width="2"/>'; });
+  const shade='<path d="M'+(x+wb*.12)+','+b+' L'+(x+wt*.12)+','+t+' L'+r1+','+t+' L'+r0+','+b+' Z" fill="#8A4B12" opacity=".13"/>';
+  const w=(win&&h>40)?(()=>{const y=b-h*.5;return '<path d="M'+(x-6)+','+(y+9)+' L'+(x-6)+','+y+' Q'+x+','+(y-10)+' '+(x+6)+','+y+' L'+(x+6)+','+(y+9)+' Z" fill="#7A4517" opacity=".72"/>';})():'';
+  return '<g class="'+(cls||'')+'">'+teeth+'<path d="'+body+'" fill="'+fill+'" stroke="#B9783A" stroke-width="2.4" stroke-linejoin="round"/><path d="'+body+'" fill="url(#grain)"/>'+shade+rid+w+'</g>';
+}
+function wallSVG(x0,x1,h){ const tw=(x1-x0)/5; let s='<rect x="'+x0+'" y="'+(-h)+'" width="'+(x1-x0)+'" height="'+h+'" fill="url(#sandG)" stroke="#B9783A" stroke-width="2.2"/>'; for(let i=0;i<3;i++) s+='<rect x="'+(x0+i*2*tw)+'" y="'+(-h-7)+'" width="'+tw+'" height="8" fill="url(#sandG)" stroke="#B9783A" stroke-width="2"/>'; return s; }
+function shellSVG(x,y,c,r){ return '<g transform="translate('+x+' '+y+') rotate('+r+')"><path d="M0,0 L-9,-10 Q0,-17 9,-10 Z" fill="'+c+'" stroke="#E07A8A" stroke-width="1.5"/><path d="M0,0 L-4,-13 M0,0 L0,-14 M0,0 L4,-13" stroke="#E07A8A" stroke-width="1.2"/></g>'; }
+function moatSVG(type,water){
+  const rx=type==='far'?178:136, ry=type==='far'?36:24;
+  return '<g class="moat"><ellipse class="m-dig" cx="0" cy="8" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="#A8692F" stroke-width="20" pathLength="100"/>'+
+    '<ellipse class="m-water" cx="0" cy="8" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="#3FD6F7" stroke-width="12" opacity="'+(water?1:0)+'"/>'+
+    '<ellipse cx="0" cy="8" rx="'+(rx+10)+'" ry="'+(ry+10)+'" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/></g>';
+}
+function castleParts(P){
+  let s='<g class="slot-moat">'+(P.moat?moatSVG(P.moat,P.water):'')+'</g>';
+  if(P.ring) s+='<ellipse class="p-ring" cx="0" cy="4" rx="66" ry="15" fill="#fff" fill-opacity=".25" stroke="#fff" stroke-width="3" stroke-dasharray="9 7"/>';
+  if(P.pile) s+='<g class="p-pile"><path d="M110,2 C118,-30 138,-42 152,-42 C168,-42 186,-28 194,2 Z" fill="url(#wetG)" stroke="#9C6431" stroke-width="2"/><path d="M110,2 C118,-30 138,-42 152,-42 C168,-42 186,-28 194,2 Z" fill="url(#grain)"/><circle cx="140" cy="-28" r="3" fill="#fff" opacity=".45"/><circle cx="160" cy="-18" r="2" fill="#fff" opacity=".4"/></g>';
+  if(P.walls) s+='<g class="p-walls">'+wallSVG(-72,-42,34)+wallSVG(42,72,34)+'</g>';
+  if(P.sides) s+=towerSVG(-100,0,62,50,64,F,'p-sideL',true)+towerSVG(100,0,62,50,64,F,'p-sideR',true);
+  if(P.main) s+=towerSVG(0,0,88,66,84,F,'p-main',true);
+  if(P.top) s+=towerSVG(0,-84,48,38,44,F,'p-top',false);
+  if(P.flag) s+='<g class="p-flag"><line x1="0" y1="-132" x2="0" y2="-182" stroke="#13264A" stroke-width="3" stroke-linecap="round"/><path class="flag-cloth" d="M1,-182 L36,-173 L1,-163 Z" fill="#FF5B6E" stroke="#E23A55" stroke-width="1.5"/></g>';
+  if(P.shells) s+='<g class="p-shells">'+shellSVG(-150,22,'#FFD0DA',-20)+shellSVG(-40,24,'#FFE08A',10)+shellSVG(140,20,'#FFB8C6',25)+shellSVG(-18,-26,'#FFD0DA',0)+shellSVG(18,-26,'#FFE08A',0)+'<g transform="translate(70 26) rotate(15)"><path d="M0,-10 L3,-3 L10,-2 L4,3 L6,10 L0,6 L-6,10 L-4,3 L-10,-2 L-3,-3 Z" fill="#FF7A59" stroke="#E0533A" stroke-width="1.2"/></g></g>';
+  return s;
+}
+const st={};
+function resetState(){ Object.assign(st,{ring:false,pile:false,main:false,top:false,sides:false,walls:false,moat:null,water:false,flag:false,shells:false}); }
+function renderCastle(){ Lc.innerHTML=''; add(Lc,'<g transform="translate('+CX+','+GY+')"><g id="castle">'+castleParts(st)+'</g></g>'); }
+const $c=s=>Lc.querySelector(s);
+
+/* ---------- effects ---------- */
+function crumble(x0,x1,y0,y1,g,color,n){
+  n=n||28; const grp=add(Lfx,'<g/>'), ps=[];
+  for(let i=0;i<n;i++){
+    const x=x0+R()*(x1-x0), y=y0+R()*(y1-y0), r=2+R()*4.5;
+    const c=add(grp,'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+color+'" stroke="#B9783A" stroke-width=".8"/>');
+    const dx=(R()-.5)*80, dy=g-y-r+R()*8;
+    ps.push(A(c,[{transform:'translate(0px,0px)'},{transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)'}],650+R()*450,{ease:'cubic-bezier(.45,0,1,1)',delay:R()*180}));
+  }
+  return Promise.all(ps);
+}
+function mound(x,g,w,color,delay){
+  const m=add(Lfx,'<path d="M'+(x-w/2)+','+(g+2)+' Q'+x+','+(g-w*.36)+' '+(x+w/2)+','+(g+2)+' Z" fill="'+color+'" stroke="#B9783A" stroke-width="1.5"/>');
+  org(m,'50%','100%'); m.style.transform='scaleY(0)';
+  return A(m,[{transform:'scaleY(0)'},{transform:'scaleY(1)'}],600,{delay:delay||300});
+}
+function sparkle(x,y,n,spread){
+  n=n||10; spread=spread||80;
+  for(let i=0;i<n;i++){
+    const sx=x+(R()-.5)*spread*2, sy=y+(R()-.5)*spread, s=6+R()*6;
+    const p=add(Lfx,'<path d="M'+sx+','+(sy-s)+' L'+(sx+s*.28)+','+(sy-s*.28)+' L'+(sx+s)+','+sy+' L'+(sx+s*.28)+','+(sy+s*.28)+' L'+sx+','+(sy+s)+' L'+(sx-s*.28)+','+(sy+s*.28)+' L'+(sx-s)+','+sy+' L'+(sx-s*.28)+','+(sy-s*.28)+' Z" fill="#FFF6B0" stroke="#FFC42E" stroke-width="1.5"/>');
+    org(p,'50%','50%'); p.style.transform='scale(0)';
+    A(p,[{transform:'scale(0) rotate(0deg)'},{transform:'scale(1.25) rotate(45deg)',offset:.45},{transform:'scale(0) rotate(90deg)'}],950,{delay:i*70}).then(()=>p.remove());
+  }
+}
+function popText(x,y,t,size,color){
+  const e=add(Lfx,'<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="Lilita One, Trebuchet MS, sans-serif" font-size="'+(size||22)+'" fill="'+(color||'#fff')+'" stroke="#13264A" stroke-width="5" paint-order="stroke" stroke-linejoin="round">'+t+'</text>');
+  org(e,'50%','50%');
+  return A(e,[{transform:'translateY(6px) scale(.5)',opacity:0},{transform:'translateY(-6px) scale(1.1)',opacity:1,offset:.3},{transform:'translateY(-26px) scale(1)',opacity:0}],900).then(()=>e.remove());
+}
+function drop(x,y,toY,color,dur){
+  const d=add(Lfx,'<path d="M'+x+','+(y-6)+' q4,6 0,9 q-4,-3 0,-9z" fill="'+(color||'#2FC8F5')+'"/>');
+  return A(d,[{transform:'translateY(0px)',opacity:1},{transform:'translateY('+(toY-y)+'px)',opacity:0}],dur||500,{ease:'ease-in'}).then(()=>d.remove());
+}
+function puff(x,y){
+  for(let i=0;i<5;i++){ const c=add(Lfx,'<circle cx="'+(x+(i-2)*14)+'" cy="'+y+'" r="8" fill="#FFF3D6" opacity=".9"/>'); org(c,'50%','50%'); A(c,[{transform:'scale(.3)',opacity:.9},{transform:'scale(1.8) translateY(-6px)',opacity:0}],700,{delay:i*40}).then(()=>c.remove()); }
+}
+async function waveIn(dx){
+  WAVE.getAnimations().forEach(a=>a.cancel());
+  await A(WAVE,[{transform:'translateX(-80px)',opacity:0},{transform:'translateX(0px)',opacity:1,offset:.25},{transform:'translateX('+dx+'px)',opacity:1}],1600,{ease:'cubic-bezier(.25,.6,.3,1)'});
+}
+async function waveOut(dx){
+  await A(WAVE,[{transform:'translateX('+dx+'px)',opacity:1},{transform:'translateX(-60px)',opacity:0}],1500,{ease:'ease-in'});
+  WAVE.getAnimations().forEach(a=>a.cancel());
+}
+function stamp(ok){
+  const s=$('#stamp'); s.className='stamp'+(ok?'':' bad'); s.firstElementChild.innerHTML=ok?CHECK:CROSS; s.hidden=false;
+  A(s.firstElementChild,[{transform:'scale(.2) rotate(-20deg)',opacity:0},{transform:'scale(1.12) rotate(4deg)',opacity:1,offset:.45},{transform:'scale(1)',opacity:1,offset:.7},{transform:'scale(1)',opacity:0}],1300,{ease:'ease-out'}).then(()=>{s.hidden=true;});
+}
+function confetti(){
+  if(RM) return; const box=$('#confetti'); const cols=['#FF5B6E','#FFC42E','#14C79A','#0FB5E8','#fff','#8E6CFF'];
+  for(let i=0;i<70;i++){ const s=document.createElement('i'); s.style.left=(R()*100)+'%'; s.style.background=cols[i%cols.length]; box.appendChild(s);
+    s.animate([{transform:'translate(0,-20px) rotate(0deg)'},{transform:'translate('+((R()-.5)*140)+'px,'+(box.clientHeight+40)+'px) rotate('+(R()*720)+'deg)'}],{duration:1800+R()*1500,delay:R()*600,easing:'cubic-bezier(.3,.6,.6,1)',fill:'forwards'}).finished.then(()=>s.remove()).catch(()=>s.remove()); }
+}
+function pin(letter,cls){ const p=$('#pin'+letter); if(p) p.setAttribute('class','pin'+(cls?' '+cls:'')); }
+
+/* ---------- props: bucket & spade ---------- */
+let B=null, SP=null;
+function addBucket(level,packed){
+  const shape='M428,'+GY+' L417,345 L503,345 L492,'+GY+' Z';
+  const g=add(Lfx,'<g class="bucket"><path class="b-handle" d="M418,350 Q460,296 502,350" fill="none" stroke="#13264A" stroke-width="4" stroke-linecap="round"/>'+
+   '<g class="b-body"><path d="'+shape+'" fill="#FFE3E7"/>'+
+   '<g clip-path="url(#bclip)"><rect class="b-fill" x="410" y="343" width="100" height="'+(GY-343)+'" fill="url(#looseP)"/><rect class="b-fill2" x="410" y="343" width="100" height="'+(GY-343)+'" fill="url(#packed)" opacity="0"/></g>'+
+   '<path d="'+shape+'" fill="#FF5B6E" fill-opacity=".42" stroke="#E23A55" stroke-width="3" stroke-linejoin="round"/>'+
+   '<path d="M424,400 L496,400 M421,372 L499,372" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>'+
+   '<path d="M466,356 l3,7 7,1 -5,5 1,7 -6,-3 -6,3 1,-7 -5,-5 7,-1z" fill="#FFC42E" stroke="#E0A000" stroke-width="1"/>'+
+   '<rect x="412" y="338" width="96" height="11" rx="5.5" fill="#FF5B6E" stroke="#E23A55" stroke-width="2.5"/></g></g>');
+  const b={g:g,body:g.querySelector('.b-body'),handle:g.querySelector('.b-handle'),fill:[g.querySelector('.b-fill'),g.querySelector('.b-fill2')],lv:level};
+  org(b.body,'50%','50%');
+  b.fill.forEach(r=>{org(r,'50%','100%'); r.style.transform='scaleY('+level+')';});
+  if(packed) b.fill[1].setAttribute('opacity','1');
+  return b;
+}
+function setLevel(b,to,dur){ b.fill.forEach(r=>A(r,[{transform:'scaleY('+b.lv+')'},{transform:'scaleY('+to+')'}],dur)); b.lv=to; }
+function addSpade(){
+  const g=add(Lfx,'<g transform="translate(618,395)"><g class="spade"><rect x="-4" y="-86" width="8" height="64" rx="4" fill="#FFC42E" stroke="#C98E00" stroke-width="1.5"/><rect x="-13" y="-96" width="26" height="12" rx="6" fill="#FFC42E" stroke="#C98E00" stroke-width="1.5"/><path d="M-15,-26 L15,-26 L13,-4 Q0,10 -13,-4 Z" fill="#2B7CF7" stroke="#1857BC" stroke-width="2" stroke-linejoin="round"/></g></g>');
+  const s=g.querySelector('.spade'); org(s,'50%','100%'); s.style.transform='translate(0px,0px) rotate(18deg)'; return s;
+}
+const SP0='translate(0px,0px) rotate(18deg)';
+async function scoop(level,dur){
+  dur=dur||850;
+  await A(SP,[{transform:SP0},{transform:'translate(0px,8px) rotate(32deg)'}],220);
+  const clump=add(SP,'<ellipse cx="0" cy="-14" rx="13" ry="7" fill="#D99C55" stroke="#B9783A" stroke-width="1.2"/>');
+  await A(SP,[{transform:'translate(0px,8px) rotate(32deg)'},{transform:'translate(-80px,-120px) rotate(0deg)'},{transform:'translate(-158px,-72px) rotate(-20deg)'}],dur);
+  await A(SP,[{transform:'translate(-158px,-72px) rotate(-20deg)'},{transform:'translate(-158px,-72px) rotate(70deg)'}],240);
+  clump.remove();
+  const f=add(Lfx,'<ellipse cx="460" cy="328" rx="13" ry="7" fill="#D99C55"/>'), yTo=GY-80*level;
+  A(f,[{transform:'translateY(0px)',opacity:1},{transform:'translateY('+(yTo-328)+'px)',opacity:0}],320,{ease:'ease-in'}).then(()=>f.remove());
+  setLevel(B,level,380);
+  await A(SP,[{transform:'translate(-158px,-72px) rotate(70deg)'},{transform:SP0}],dur*.8);
+}
+async function flip(b){
+  await A(b.handle,[{opacity:1},{opacity:0}],250);
+  await A(b.body,[{transform:'translateY(0px) rotate(0deg)'},{transform:'translateY(-70px) rotate(90deg)',offset:.5},{transform:'translateY(0px) rotate(180deg)'}],950);
+  puff(460,GY);
+}
+function lift(b,ms,dy){ return A(b.body,[{transform:'translateY(0px) rotate(180deg)',opacity:1},{transform:'translateY('+dy+'px) rotate(180deg)',opacity:1,offset:.8},{transform:'translateY('+(dy-20)+'px) rotate(180deg)',opacity:0}],ms); }
+function revealTower(h,holes){
+  h=h||84; const wt=88-22*h/84;
+  const hl=holes?'<g fill="#8A4B12" opacity=".6"><ellipse cx="-18" cy="-24" rx="7" ry="5"/><ellipse cx="14" cy="-50" rx="9" ry="6"/><ellipse cx="22" cy="-18" rx="5" ry="4"/><ellipse cx="-12" cy="-66" rx="6" ry="4"/><ellipse cx="-2" cy="-38" rx="4" ry="3"/></g>':'';
+  const g=add(Lfx,'<g transform="translate('+CX+','+GY+')"><g class="rt">'+towerSVG(0,0,88,wt,h,F,'',h>50)+hl+'</g></g>',B.g);
+  const t=g.querySelector('.rt'); org(t,'50%','100%'); return t;
+}
+
+/* ---------- step 1: spot ---------- */
+async function s1near(){
+  pin('A','play'); const head=$('#pinA .pin-head'); A(head,[{opacity:1},{opacity:0}],250);
+  cap('You build a castle near the water…');
+  const g=add(Lfx,'<g transform="translate(240,'+GY+') scale(.62)"><g class="mc">'+castleParts({main:1,top:1,sides:1,walls:1,flag:1})+'</g></g>');
+  const mc=g.querySelector('.mc'); org(mc,'50%','100%');
+  await A(mc,[{transform:'scale(0)'},{transform:'scale(1.08)',offset:.7},{transform:'scale(1)'}],700,{ease:'ease-out'});
+  await wait(700);
+  cap('Look! A big wave is coming!');
+  await waveIn(95);
+  cap('Splash!');
+  popText(250,300,'SPLASH!',30,'#7FE7FF');
+  crumble(180,300,330,420,GY,SANDC,34);
+  await A(mc,[{transform:'scale(1)',opacity:1},{transform:'scale(1.35,.12)',opacity:0}],900,{ease:'ease-in'});
+  await waveOut(95);
+  A(head,[{opacity:0},{opacity:1}],300);
+  cap('The wave washed the castle away.');
+}
+async function s1far(){
+  pin('C','play');
+  cap('You build far from the water. You need water for the sand.');
+  const line=add(Lfx,'<g><path d="M222,458 L672,458" stroke="#13264A" stroke-width="3" stroke-dasharray="10 8" marker-end="url(#arrow)" fill="none"/><text x="447" y="450" text-anchor="middle" font-family="Lilita One, Trebuchet MS, sans-serif" font-size="20" fill="#fff" stroke="#13264A" stroke-width="5" paint-order="stroke">so far!</text></g>');
+  A(line,[{opacity:0},{opacity:1}],400);
+  const wk=add(Lfx,'<g transform="translate(205,'+GY+')"><g class="walker"><path d="M-19,-36 Q0,-62 19,-36" fill="none" stroke="#13264A" stroke-width="3"/><g clip-path="url(#wbclip)"><rect class="wfill" x="-22" y="-38" width="44" height="38" fill="#2FC8F5"/></g><path d="M-16,0 L-20,-38 L20,-38 L16,0 Z" fill="#FF5B6E" fill-opacity=".45" stroke="#E23A55" stroke-width="2.5" stroke-linejoin="round"/><rect x="-22" y="-42" width="44" height="7" rx="3.5" fill="#FF5B6E" stroke="#E23A55" stroke-width="2"/></g></g>');
+  const walker=wk.querySelector('.walker'), wfill=wk.querySelector('.wfill'); org(wfill,'50%','100%');
+  await wait(600);
+  cap('You walk and walk with the bucket…');
+  const D=470, dur=3600, fr=[];
+  for(let i=0;i<=16;i++){ fr.push({transform:'translate('+(D*i/16).toFixed(1)+'px,'+(i%2?-9:0)+'px) rotate('+(i%2?-5:5)+'deg)'}); }
+  const t0=performance.now();
+  const iv=setInterval(()=>{ const k=Math.min(1,(performance.now()-t0)/dur); drop(205+D*k+(R()-.5)*24,GY-34,GY+4,'#2FC8F5',420); },140);
+  A(wfill,[{transform:'scaleY(1)'},{transform:'scaleY(.04)'}],dur,{ease:'linear'});
+  await A(walker,fr,dur,{ease:'linear'});
+  clearInterval(iv);
+  popText(675,330,'empty!',26,'#FFC42E');
+  cap('The bucket is empty! The water is too far.');
+}
+async function s1mid(){
+  pin('B','play');
+  cap('Not too near and not too far…');
+  await wait(500);
+  st.ring=true; renderCastle(); const r=$c('.p-ring'); org(r,'50%','50%');
+  A(r,[{transform:'scale(0)',opacity:0},{transform:'scale(1.2)',opacity:1,offset:.6},{transform:'scale(1)',opacity:1}],600);
+  sparkle(460,GY-30,10,70);
+  cap('Wet sand here, and the water is close!');
+  await wait(900);
+}
+
+/* ---------- step 2: sand ---------- */
+function testTower(fill){ const g=add(Lfx,'<g transform="translate('+CX+','+GY+')"><g class="tt">'+towerSVG(0,0,74,60,78,fill,'',true)+'</g></g>'); const t=g.querySelector('.tt'); org(t,'50%','100%'); return t; }
+const rise=t=>A(t,[{transform:'scaleY(0)'},{transform:'scaleY(1.06)',offset:.75},{transform:'scaleY(1)'}],700,{ease:'ease-out'});
+async function s2dry(){
+  cap('You use dry sand…');
+  const t=testTower(DRY); puff(CX,GY-6); await rise(t); await wait(500);
+  cap('Hmm… it looks weak.');
+  await A(t,[{transform:'rotate(0deg)'},{transform:'rotate(-2.5deg)'},{transform:'rotate(2.5deg)'},{transform:'rotate(0deg)'}],380,{it:2});
+  crumble(CX-38,CX+38,GY-82,GY-6,GY,DRY,42); mound(CX,GY,110,DRY,250); puff(CX,GY-40);
+  await A(t,[{opacity:1,transform:'scaleY(1)'},{opacity:0,transform:'scaleY(.2)'}],750,{ease:'ease-in'});
+  cap('The dry sand falls apart.');
+}
+async function s2soup(){
+  cap('You add a lot of water…');
+  const pud=add(Lfx,'<ellipse cx="'+CX+'" cy="'+(GY+4)+'" rx="32" ry="7" fill="#3FC3E8" opacity=".75"/>'); org(pud,'50%','50%');
+  const t=testTower(SOUP); await rise(t);
+  for(let i=0;i<6;i++) drop(CX+(R()-.5)*70,GY-60+R()*40,GY+2,'#6FD3F0',500+R()*300);
+  await wait(500);
+  cap('Oh no… it is too runny!');
+  A(pud,[{transform:'scaleX(1)'},{transform:'scaleX(4.2)'}],1700);
+  await A(t,[{transform:'scale(1,1)'},{transform:'scale(1.15,.82)',offset:.3},{transform:'scale(2,.16)'}],1700,{ease:'ease-in'});
+  cap('The sand runs away like soup.');
+}
+async function s2right(){
+  cap('You use wet sand…');
+  const t=testTower(F); await rise(t); await wait(300);
+  cap('Push it… it stays!');
+  await A(t,[{transform:'rotate(0deg)'},{transform:'rotate(-1deg)'},{transform:'rotate(1deg)'},{transform:'rotate(0deg)'}],300);
+  sparkle(CX,GY-50,10,60);
+  st.pile=true; renderCastle(); const p=$c('.p-pile'); org(p,'50%','100%');
+  A(p,[{transform:'scaleY(0)'},{transform:'scaleY(1.1)',offset:.7},{transform:'scaleY(1)'}],600);
+  await wait(700);
+  cap('Wet sand holds its shape.');
+}
+
+/* ---------- step 3: fill the bucket ---------- */
+async function s3little(){
+  cap('You put in a little sand…');
+  await scoop(.25);
+  cap('Now turn it over and lift it…');
+  await flip(B); const t=revealTower(22); await lift(B,1300,-170);
+  popText(CX,GY-50,'?',40,'#FFC42E');
+  cap('The tower is too short!');
+}
+async function s3loose(){
+  cap('You fill it, but you don\'t press the sand.');
+  await scoop(.4,650); await scoop(.75,650); await scoop(1,650);
+  cap('Turn it over and lift it…');
+  await flip(B); const t=revealTower(84,true); await lift(B,1300,-170);
+  cap('Look at the holes!');
+  await A(t,[{transform:'rotate(0deg)'},{transform:'rotate(-2deg)'},{transform:'rotate(2deg)'},{transform:'rotate(0deg)'}],380,{it:2});
+  crumble(CX-34,CX+34,GY-86,GY-44,GY,'#E7B06A',34); mound(CX+30,GY,70,'#E7B06A',300);
+  await A(t,[{transform:'scaleY(1)'},{transform:'scaleY(.5)'}],600,{ease:'ease-in'});
+  cap('Loose sand has holes. The tower breaks.');
+}
+async function s3right(){
+  cap('Fill the bucket to the top…');
+  await scoop(.4,650); await scoop(.75,650); await scoop(1,650);
+  cap('Pat, pat, pat!');
+  await A(SP,[{transform:SP0},{transform:'translate(-140px,-90px) rotate(-90deg)'}],650);
+  for(let k=0;k<3;k++){
+    await A(SP,[{transform:'translate(-140px,-90px) rotate(-90deg)'},{transform:'translate(-140px,-60px) rotate(-90deg)'}],170,{ease:'ease-in'});
+    popText(445+k*15,318,'pat!',20,'#FFC42E'); puff(460,343);
+    A(B.fill[1],[{opacity:k/3},{opacity:(k+1)/3}],200);
+    await A(SP,[{transform:'translate(-140px,-60px) rotate(-90deg)'},{transform:'translate(-140px,-90px) rotate(-90deg)'}],200);
+  }
+  B.fill[1].setAttribute('opacity','1');
+  await A(SP,[{transform:'translate(-140px,-90px) rotate(-90deg)'},{transform:SP0}],600);
+  sparkle(460,360,8,50);
+  cap('Now the sand is hard and full!');
+}
+
+/* ---------- step 4: turn the bucket over ---------- */
+async function s4fast(){
+  cap('Turn the bucket over…'); await flip(B);
+  const t=revealTower(); cap('…and lift it fast!');
+  await A(B.body,[{transform:'translateY(0px) rotate(180deg)',opacity:1},{transform:'translateY(-240px) rotate(220deg)',opacity:0}],380,{ease:'ease-in'});
+  await A(t,[{transform:'rotate(0deg)'},{transform:'rotate(-4deg)'},{transform:'rotate(3deg)'}],300);
+  crumble(CX-40,CX+40,GY-86,GY-30,GY,'#E1A35A',42); mound(CX,GY,120,'#E1A35A',200);
+  await A(t,[{transform:'rotate(3deg) scaleY(1)'},{transform:'rotate(0deg) scaleY(.32)'}],650,{ease:'ease-in'});
+  cap('Too fast! The tower breaks.');
+}
+async function s4stay(){
+  cap('Turn the bucket over…'); await flip(B);
+  cap('…and go for a swim!');
+  const clk=add(Lfx,'<g><rect x="372" y="226" width="176" height="40" rx="20" fill="#13264A"/><text x="460" y="253" text-anchor="middle" font-family="Lilita One, Trebuchet MS, sans-serif" font-size="20" fill="#fff">1 hour later…</text></g>');
+  org(clk,'50%','50%'); await A(clk,[{transform:'scale(.6)',opacity:0},{transform:'scale(1)',opacity:1}],400);
+  await wait(1300); await A(clk,[{opacity:1},{opacity:0}],300);
+  const q=add(Lfx,'<text x="460" y="318" text-anchor="middle" font-family="Lilita One, Trebuchet MS, sans-serif" font-size="48" fill="#FF5B6E" stroke="#fff" stroke-width="6" paint-order="stroke">?</text>');
+  org(q,'50%','100%'); A(q,[{transform:'scale(0)'},{transform:'scale(1.2)',offset:.6},{transform:'scale(1)'}],500);
+  cap('The sand is still in the bucket. Where is the tower?');
+}
+async function s4right(){
+  cap('Turn the bucket over…'); await flip(B);
+  cap('Tap, tap, tap!');
+  for(let k=0;k<3;k++){
+    popText(426+k*34,328,'tap!',20,'#FFC42E');
+    await A(B.body,[{transform:'translate(0px,0px) rotate(180deg)'},{transform:'translate(0px,3px) rotate(178deg)'},{transform:'translate(0px,0px) rotate(180deg)'}],260);
+    await wait(140);
+  }
+  const t=revealTower(); cap('Now lift it slowly…');
+  await lift(B,2400,-180);
+  st.main=true; st.ring=false; renderCastle(); Lfx.innerHTML='';
+  sparkle(CX,GY-60,12,70);
+  cap('Wow! A tall, strong tower!');
+  await wait(600);
+}
+
+/* ---------- step 5: more towers ---------- */
+async function s5big(){
+  cap('You put a big tower on a small tower…');
+  const g=add(Lfx,'<g transform="translate('+(CX+112)+','+GY+')"><g class="stk"><g class="sm">'+towerSVG(0,0,46,38,46,F,'',false)+'</g><g class="bg">'+towerSVG(0,-46,88,66,84,F,'',true)+'</g></g></g>');
+  const sm=g.querySelector('.sm'), bg=g.querySelector('.bg'), stk=g.querySelector('.stk');
+  org(sm,'50%','100%'); org(bg,'50%','100%'); org(stk,'50%','100%'); bg.style.opacity='0';
+  await A(sm,[{transform:'scaleY(0)'},{transform:'scaleY(1)'}],450);
+  await A(bg,[{transform:'translateY(-190px)',opacity:0},{transform:'translateY(0px)',opacity:1,offset:.8},{transform:'translateY(-6px)',opacity:1,offset:.9},{transform:'translateY(0px)',opacity:1}],850,{ease:'ease-in'});
+  puff(CX+112,GY-48);
+  cap('Wobble, wobble…');
+  await A(stk,[{transform:'rotate(0deg)'},{transform:'rotate(4deg)'},{transform:'rotate(-4deg)'},{transform:'rotate(7deg)'}],800);
+  cap('It is too heavy! Crash!');
+  await A(stk,[{transform:'rotate(7deg)',opacity:1},{transform:'rotate(80deg)',opacity:1,offset:.85},{transform:'rotate(88deg)',opacity:0}],750,{ease:'ease-in'});
+  popText(620,330,'CRASH!',28,'#FFC42E');
+  crumble(560,680,GY-60,GY-6,GY,SANDC,46); mound(618,GY,120,SANDC,150);
+  await wait(700);
+  cap('The big tower is too heavy for the small tower.');
+}
+async function s5dry(){
+  cap('You build two towers with dry sand…');
+  const g=add(Lfx,'<g transform="translate('+CX+','+GY+')"><g class="dl">'+towerSVG(-100,0,62,50,64,DRY,'',true)+'</g><g class="dr">'+towerSVG(100,0,62,50,64,DRY,'',true)+'</g></g>');
+  const dl=g.querySelector('.dl'), dr=g.querySelector('.dr'); [dl,dr].forEach(e=>org(e,'50%','100%'));
+  await Promise.all([rise(dl),rise(dr)]); await wait(500);
+  cap('Oh no…');
+  await Promise.all([dl,dr].map(e=>A(e,[{transform:'rotate(0deg)'},{transform:'rotate(-3deg)'},{transform:'rotate(3deg)'},{transform:'rotate(0deg)'}],360,{it:2})));
+  crumble(CX-130,CX-70,GY-66,GY-6,GY,DRY,30); crumble(CX+70,CX+130,GY-66,GY-6,GY,DRY,30);
+  mound(CX-100,GY,80,DRY,250); mound(CX+100,GY,80,DRY,250); puff(CX-100,GY-30); puff(CX+100,GY-30);
+  await Promise.all([dl,dr].map(e=>A(e,[{transform:'scaleY(1)',opacity:1},{transform:'scaleY(.15)',opacity:0}],750,{ease:'ease-in'})));
+  cap('Dry sand cannot hold the towers.');
+}
+async function s5right(){
+  cap('Put a small tower on top…');
+  const tg=add(Lfx,'<g transform="translate('+CX+','+GY+')"><g class="tp">'+towerSVG(0,-84,48,38,44,F,'',false)+'</g></g>'); const tp=tg.querySelector('.tp');
+  await A(tp,[{transform:'translateY(-170px)',opacity:0},{transform:'translateY(0px)',opacity:1,offset:.75},{transform:'translateY(-8px)',offset:.88},{transform:'translateY(0px)'}],850,{ease:'ease-in'});
+  puff(CX,GY-86);
+  cap('…and two towers at the sides!');
+  const sg=add(Lfx,'<g transform="translate('+CX+','+GY+')"><g class="w">'+wallSVG(-72,-42,34)+wallSVG(42,72,34)+'</g><g class="sl">'+towerSVG(-100,0,62,50,64,F,'',true)+'</g><g class="sr">'+towerSVG(100,0,62,50,64,F,'',true)+'</g></g>',tg);
+  const parts=['.sl','.sr','.w'].map(s=>sg.querySelector(s)); parts.forEach(e=>{org(e,'50%','100%'); e.style.transform='scaleY(0)';});
+  await A(parts[0],[{transform:'scaleY(0)'},{transform:'scaleY(1.08)',offset:.75},{transform:'scaleY(1)'}],550);
+  await A(parts[1],[{transform:'scaleY(0)'},{transform:'scaleY(1.08)',offset:.75},{transform:'scaleY(1)'}],550);
+  await A(parts[2],[{transform:'scaleY(0)'},{transform:'scaleY(1)'}],400);
+  st.top=st.sides=st.walls=true; renderCastle(); Lfx.innerHTML='';
+  sparkle(CX,GY-80,12,110);
+  cap('Big at the bottom, small on top. Beautiful!');
+  await wait(500);
+}
+
+/* ---------- step 6: moat ---------- */
+async function s6none(){
+  cap('No moat… and the tide is coming in!');
+  await waveIn(175);
+  cap('The water hits the walls!');
+  popText(330,330,'SPLASH!',28,'#7FE7FF');
+  const Ls=$c('.p-sideL'), W=$c('.p-walls'), M=$c('.p-main'), T=$c('.p-top');
+  [Ls,W,M,T].forEach(e=>org(e,'50%','100%'));
+  crumble(CX-135,CX-40,GY-66,GY-6,GY,SANDC,40);
+  A(W,[{opacity:1,transform:'scaleY(1)'},{opacity:0,transform:'scaleY(.2)'}],700);
+  await A(Ls,[{transform:'rotate(0deg) scaleY(1)',opacity:1},{transform:'rotate(-22deg) scaleY(.3)',opacity:0}],900,{ease:'ease-in'});
+  A(M,[{transform:'rotate(0deg) translateY(0px)'},{transform:'rotate(-7deg) translateY(6px)'}],700);
+  crumble(CX-24,CX+24,GY-128,GY-90,GY,SANDC,20);
+  await A(T,[{transform:'translate(0px,0px) rotate(0deg)',opacity:1},{transform:'translate(-40px,70px) rotate(-55deg)',opacity:0}],800,{ease:'ease-in'});
+  await waveOut(175);
+  cap('The castle breaks. You need a moat!');
+}
+async function digMoat(type,dur){
+  const slot=$c('.slot-moat'); slot.innerHTML=''; const m=add(slot,moatSVG(type,false));
+  const d=m.querySelector('.m-dig'); d.style.strokeDasharray='100'; d.style.strokeDashoffset='100';
+  await A(d,[{strokeDashoffset:'100'},{strokeDashoffset:'0'}],dur,{ease:'ease-in-out'});
+  return m;
+}
+async function s6close(){
+  cap('You dig a moat right next to the walls…');
+  await digMoat('close',1400);
+  cap('The walls have nothing to stand on…');
+  await wait(500);
+  const Ls=$c('.p-sideL'), Rs=$c('.p-sideR'), W=$c('.p-walls');
+  [Ls,Rs,W].forEach(e=>org(e,'50%','100%'));
+  crumble(CX-135,CX-65,GY-60,GY,GY+12,SANDC,30); crumble(CX+65,CX+135,GY-60,GY,GY+12,SANDC,30);
+  A(W,[{opacity:1,transform:'scaleY(1)'},{opacity:0,transform:'scaleY(.2)'}],800);
+  A(Ls,[{transform:'translate(0px,0px) rotate(0deg)',opacity:1},{transform:'translate(-16px,24px) rotate(-40deg)',opacity:0}],1000,{ease:'ease-in'});
+  await A(Rs,[{transform:'translate(0px,0px) rotate(0deg)',opacity:1},{transform:'translate(16px,24px) rotate(40deg)',opacity:0}],1000,{ease:'ease-in'});
+  cap('The walls fall into the moat!');
+}
+async function s6right(){
+  cap('You dig a moat a little away from the castle…');
+  const m=await digMoat('far',1600);
+  cap('The tide is coming in…');
+  await waveIn(92);
+  popText(300,370,'splash!',24,'#7FE7FF');
+  await A(m.querySelector('.m-water'),[{opacity:0},{opacity:1}],900);
+  await wait(300);
+  await waveOut(92);
+  cap('The water goes into the moat. The castle is safe!');
+  st.moat='far'; st.water=true; st.flag=true; st.shells=true; renderCastle();
+  const fl=$c('.p-flag'), sh=$c('.p-shells'); org(fl,'50%','100%'); org(sh,'50%','100%');
+  A(fl,[{transform:'scaleY(0)'},{transform:'scaleY(1.1)',offset:.7},{transform:'scaleY(1)'}],700);
+  A(sh,[{opacity:0,transform:'translateY(-10px)'},{opacity:1,transform:'translateY(0px)'}],600,{delay:300});
+  sparkle(CX,GY-110,14,120); confetti();
+  await wait(900);
+}
+
+/* ---------- icons ---------- */
+const frame=inner=>'<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="15" fill="#C7F1FF"/>'+inner+'</svg>';
+const floor='<path d="M0,36 H56 V41 Q56,56 41,56 H15 Q0,56 0,41 Z" fill="#FFD98A"/>';
+const mt=(x,b,wb,wt,h,f)=>'<path d="M'+(x-wb/2)+','+b+' L'+(x-wt/2)+','+(b-h)+' L'+(x+wt/2)+','+(b-h)+' L'+(x+wb/2)+','+b+' Z" fill="'+(f||'#F2B861')+'" stroke="#B9783A" stroke-width="1.4" stroke-linejoin="round"/>';
+const miniC=(x,b,s,f)=>{s=s||1;return mt(x-8*s,b,8*s,6*s,9*s,f)+mt(x+8*s,b,8*s,6*s,9*s,f)+mt(x,b,11*s,9*s,14*s,f)+mt(x,b-14*s,6*s,5*s,6*s,f);};
+const ICON={
+  spot:x=>frame(floor+'<path d="M0,36 H22 Q16,46 13,56 H15 Q0,56 0,41Z" fill="#19C3F0"/><path d="M3,42 q3,-2 6,0 M3,49 q3,-2 6,0" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="46" cy="12" r="6" fill="#FFC42E"/>'+miniC(x,46,1)),
+  dry:()=>frame(floor+'<path d="M8,46 Q28,18 48,46Z" fill="#FDEBC0" stroke="#D9B577" stroke-width="1.4"/><g fill="#FDEBC0" stroke="#D9B577" stroke-width=".8"><circle cx="10" cy="30" r="2"/><circle cx="46" cy="28" r="1.6"/><circle cx="40" cy="20" r="1.4"/><circle cx="15" cy="22" r="1.2"/></g>'),
+  soup:()=>frame(floor+'<ellipse cx="28" cy="42" rx="22" ry="8" fill="#B5793A"/><ellipse cx="24" cy="40" rx="10" ry="2.6" fill="#7FE0FF" opacity=".85"/><path d="M14,18 q4,6 0,9 q-4,-3 0,-9z M40,14 q4,6 0,9 q-4,-3 0,-9z M28,22 q4,6 0,9 q-4,-3 0,-9z" fill="#2FC8F5"/>'),
+  wet:()=>frame(floor+'<path d="M8,46 Q28,12 48,46Z" fill="#E9AE5E" stroke="#B9783A" stroke-width="1.4"/><circle cx="22" cy="34" r="2" fill="#fff" opacity=".5"/><path d="M42,8 q5,7 0,10 q-5,-3 0,-10z" fill="#2FC8F5"/>'),
+  bucket:(lv,kind)=>{const y=46-26*lv, l=17-4*lv, r=39+4*lv; let s=floor+'<path d="M17,46 L'+l+','+y+' L'+r+','+y+' L39,46 Z" fill="'+(kind==='loose'?'#F8D290':'#DFA058')+'"/>';
+    if(kind==='loose') s+='<g fill="#B97A3A" opacity=".6"><circle cx="22" cy="28" r="2.2"/><circle cx="33" cy="36" r="2.6"/><circle cx="27" cy="42" r="1.8"/><circle cx="36" cy="25" r="1.6"/></g>';
+    s+='<path d="M17,46 L13,18 L43,18 L39,46 Z" fill="#FF5B6E" fill-opacity=".38" stroke="#E23A55" stroke-width="2" stroke-linejoin="round"/><rect x="11" y="15" width="34" height="5" rx="2.5" fill="#FF5B6E"/>';
+    if(kind==='pat') s+='<g transform="translate(44 6) rotate(35)"><rect x="-1.5" y="0" width="3" height="18" fill="#FFC42E"/><path d="M-6,18 H6 L5,25 Q0,29 -5,25 Z" fill="#2B7CF7"/></g><path d="M8,9 l3,3 M6,15 h4" stroke="#13264A" stroke-width="1.6" stroke-linecap="round"/>';
+    return frame(s);},
+  flip:t=>{let s=floor; const ub=(y1,y2,o)=>'<path d="M13,'+y2+' L17,'+y1+' L39,'+y1+' L43,'+y2+' Z" fill="#FF5B6E" fill-opacity="'+(o||.85)+'" stroke="#E23A55" stroke-width="2" stroke-linejoin="round"/>';
+    if(t==='fast') s+='<g fill="#E1A35A" stroke="#B9783A" stroke-width=".8"><circle cx="20" cy="44" r="3"/><circle cx="30" cy="45" r="3.5"/><circle cx="38" cy="43" r="2.5"/><circle cx="26" cy="40" r="2"/></g>'+ub(4,24)+'<path d="M8,30 v-12 M48,30 v-12 M10,36 v-8 M46,36 v-8" stroke="#13264A" stroke-width="2" stroke-linecap="round"/>';
+    else if(t==='stay') s+=ub(20,46)+'<text x="28" y="15" text-anchor="middle" font-family="Lilita One, sans-serif" font-size="14" fill="#13264A">?</text>';
+    else s+=mt(28,46,22,16,20,'#E9AE5E')+ub(2,16,.55)+'<path d="M47,22 v-10 M44,15 l3,-3 3,3" stroke="#13264A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+    return frame(s);},
+  stack:t=>{let s=floor;
+    if(t==='big') s+=mt(28,46,12,10,10)+'<g transform="rotate(14 28 36)">'+mt(28,36,26,20,18)+'</g><path d="M42,14 l4,-4 M44,20 l6,-2" stroke="#13264A" stroke-width="1.8" stroke-linecap="round"/>';
+    else if(t==='dry') s+=mt(17,46,12,10,14,'#FDEBC0')+mt(39,46,12,10,9,'#FDEBC0')+'<g fill="#FDEBC0" stroke="#D9B577" stroke-width=".8"><circle cx="44" cy="44" r="2"/><circle cx="35" cy="45" r="2.3"/><circle cx="11" cy="45" r="1.8"/><circle cx="23" cy="44" r="1.6"/></g>';
+    else s+=miniC(28,46,1.35);
+    return frame(s);},
+  moat:t=>{let s=floor;
+    if(t==='none') s+='<path d="M0,36 H16 Q13,46 10,56 H15 Q0,56 0,41Z" fill="#19C3F0"/><path d="M14,38 q4,-3 7,0" stroke="#fff" stroke-width="1.6" fill="none"/>'+miniC(34,44,1.05);
+    else if(t==='close') s+='<ellipse cx="28" cy="45" rx="15" ry="5" fill="none" stroke="#A8692F" stroke-width="4"/>'+miniC(28,44,1.05);
+    else s+='<ellipse cx="28" cy="46" rx="24" ry="7" fill="none" stroke="#A8692F" stroke-width="5"/><ellipse cx="28" cy="46" rx="24" ry="7" fill="none" stroke="#3FD6F7" stroke-width="3"/>'+miniC(28,44,1.05);
+    return frame(s);}
+};
+
+/* ---------- content ---------- */
+const STEPS=[
+ {title:'Choose the spot',q:'Where do you build your sandcastle?',cam:'full',shuffle:false,
+  words:[['spot'],['shore'],['wave'],['near'],['far'],['water']],
+  opts:[
+   {pin:'A',en:'Near the water',ok:false,icon:()=>ICON.spot(23),run:s1near,fb:'Oh no! A wave washed the castle away. This spot is too near the water.'},
+   {pin:'B',en:'Not too near, not too far',ok:true,icon:()=>ICON.spot(35),run:s1mid,fb:'Great spot! The sand is wet, and the water is close.'},
+   {pin:'C',en:'Far from the water',ok:false,icon:()=>ICON.spot(44),run:s1far,fb:'It is too far! You walk and walk, and the water spills out of the bucket.'}]},
+ {title:'Make the sand',q:'What sand is good for a castle?',cam:'close',shuffle:true,
+  words:[['sand'],['dry'],['wet'],['runny'],['shape'],['hold']],
+  opts:[
+   {en:'Dry sand',ok:false,icon:ICON.dry,run:s2dry,fb:'The sand is too dry. The castle falls apart.'},
+   {en:'Sand with a lot of water',ok:false,icon:ICON.soup,run:s2soup,fb:'Too much water! The sand is runny. It can\'t hold its shape.'},
+   {en:'Wet sand',ok:true,icon:ICON.wet,run:s2right,fb:'Perfect! Wet sand sticks together and holds its shape.'}]},
+ {title:'Fill the bucket',q:'How do you fill the bucket?',cam:'close',shuffle:true,
+  setup:()=>{B=addBucket(0,false); SP=addSpade();},
+  words:[['bucket'],['spade'],['fill'],['pat'],['to the top'],['full']],
+  opts:[
+   {en:'Put in a little sand',ok:false,icon:()=>ICON.bucket(.28,'pat0'),run:s3little,fb:'There is not enough sand. The tower is too short.'},
+   {en:'Fill it, but don\'t press the sand',ok:false,icon:()=>ICON.bucket(1,'loose'),run:s3loose,fb:'The sand is loose. The tower has holes and breaks.'},
+   {en:'Fill it to the top and pat it with the spade',ok:true,icon:()=>ICON.bucket(1,'pat'),run:s3right,fb:'Yes! Pat, pat, pat. Now the sand is hard and full.'}]},
+ {title:'Turn the bucket over',q:'How do you make the tower?',cam:'close',shuffle:true,
+  setup:()=>{B=addBucket(1,true);},
+  words:[['turn over'],['tap'],['lift'],['slowly'],['fast'],['tower']],
+  opts:[
+   {en:'Turn it over and lift it fast',ok:false,icon:()=>ICON.flip('fast'),run:s4fast,fb:'Too fast! The tower breaks.'},
+   {en:'Turn it over and go away',ok:false,icon:()=>ICON.flip('stay'),run:s4stay,fb:'The sand is still in the bucket. You need to lift the bucket!'},
+   {en:'Turn it over, tap it, lift it slowly',ok:true,icon:()=>ICON.flip('slow'),run:s4right,fb:'Look! A tall, strong tower!'}]},
+ {title:'Add more towers',q:'How do you add more towers?',cam:'close',shuffle:true,
+  words:[['big'],['small'],['on top'],['next to'],['heavy'],['wall']],
+  opts:[
+   {en:'Put a big tower on a small tower',ok:false,icon:()=>ICON.stack('big'),run:s5big,fb:'The big tower is too heavy. Everything falls down!'},
+   {en:'Build the towers with dry sand',ok:false,icon:()=>ICON.stack('dry'),run:s5dry,fb:'Dry sand can\'t hold the towers. They fall apart.'},
+   {en:'A small tower on top, two towers next to it',ok:true,icon:()=>ICON.stack('right'),run:s5right,fb:'Beautiful! Big at the bottom, small on top.'}]},
+ {title:'Dig a moat',q:'How do you keep the castle safe from the water?',cam:'wide',shuffle:true,
+  words:[['moat'],['dig'],['safe'],['tide'],['flag'],['shell']],
+  opts:[
+   {en:'Don\'t dig a moat',ok:false,icon:()=>ICON.moat('none'),run:s6none,fb:'The water comes to the walls. The castle breaks!'},
+   {en:'Dig a moat right next to the walls',ok:false,icon:()=>ICON.moat('close'),run:s6close,fb:'The moat is too close. The walls fall into it!'},
+   {en:'Dig a moat a little away from the castle',ok:true,icon:()=>ICON.moat('far'),run:s6right,fb:'Hooray! The water goes into the moat. The castle is safe!'}]}
+];
+const RECAP=[
+ ['Choose a spot not too near and not too far from the water.'],
+ ['Use wet sand.'],
+ ['Fill the bucket to the top and pat the sand.'],
+ ['Turn the bucket over, tap it and lift it slowly.'],
+ ['Put a small tower on top and two towers next to it.'],
+ ['Dig a moat around the castle.']
+];
+
+/* ---------- speech ---------- */
+const canSpeak='speechSynthesis' in window; let voice=null, voiceOn=true;
+function pickVoice(){ try{ const v=speechSynthesis.getVoices(); voice=v.find(x=>/en[-_]US/i.test(x.lang)&&/Samantha|Google|Natural|Aria|Jenny|Ava/i.test(x.name))||v.find(x=>/^en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null; }catch(e){} }
+if(canSpeak){ pickVoice(); try{ speechSynthesis.onvoiceschanged=pickVoice; }catch(e){} }
+function speak(t){ if(!canSpeak) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='en-US'; if(voice) u.voice=voice; u.rate=.86; speechSynthesis.speak(u); }catch(e){} }
+const autoSay=t=>{ if(voiceOn) speak(t); };
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-say]'); if(b){ speak(b.getAttribute('data-say')); } });
+if(!canSpeak){ $('#voiceBtn').hidden=true; }
+
+/* ---------- game flow ---------- */
+const panel=$('#panel');
+let cur=0, busy=false, wrongs=0, pre={}, post=null;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const done=[], first=[];
+const esc=s=>s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const sayBtn=(t,label)=>canSpeak?'<button class="say" type="button" data-say="'+esc(t)+'" aria-label="'+(label||'Listen')+'">'+SPK+'</button>':'';
+
+function hud(){
+  $('#dots').innerHTML=STEPS.map((s,i)=>'<li class="'+(done[i]?'done':(i===cur?'now':''))+'" title="'+esc(s.title)+'" aria-label="Step '+(i+1)+(done[i]?', done':'')+'">'+(done[i]?'✓':(i+1))+'</li>').join('');
+  $('#starN').textContent=first.filter(Boolean).length;
+}
+function renderWords(list){
+  $('#chips').innerHTML=list.map(w=>'<button class="chip" type="button" data-say="'+esc(w[0])+'"><span class="dotspk">'+SPK+'</span>'+esc(w[0])+'</button>').join('');
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } if(a[a.length-1].ok&&R()<.5){ [a[0],a[a.length-1]]=[a[a.length-1],a[0]]; } return a; }
+
+function goStep(i,instant){
+  cur=i; wrongs=0; const s=STEPS[i];
+  if(i>=4) st.pile=false;
+  pre=clone(st); post=null;
+  WAVE.getAnimations().forEach(a=>a.cancel());
+  Lfx.innerHTML=''; renderCastle(); if(s.setup) s.setup();
+  Lspots.style.display=i===0?'':'none';
+  if(i===0){ ['A','B','C'].forEach(l=>pin(l,'')); }
+  cap();
+  camera(CAM[s.cam],instant?0:1100);
+  const opts=s.shuffle?shuffle(s.opts):s.opts;
+  panel.innerHTML='<div class="eyebrow">Step '+(i+1)+' of 6</div>'+
+    '<div><h2>'+esc(s.title)+'</h2></div>'+
+    '<div class="q">'+sayBtn(s.q,'Listen to the question')+'<div><p>'+esc(s.q)+'</p></div></div>'+
+    '<div class="opts" id="opts"></div>'+
+    '<div class="fb" id="fb" hidden></div>'+
+    '<button class="next" id="next" type="button" hidden>'+(i<5?'Next step →':'See my sandcastle →')+'</button>'+
+    '<p class="hint" id="hint">Choose A, B or C. Then watch what happens.</p>';
+  const box=$('#opts');
+  opts.forEach((o,k)=>{
+    const b=document.createElement('button'); b.type='button'; b.className='opt';
+    const L=o.pin||'ABC'[k];
+    b.innerHTML='<span class="letter">'+L+'</span><span class="ico">'+o.icon()+'</span><span class="otext"><b>'+esc(o.en)+'</b></span>';
+    b.addEventListener('click',()=>choose(o,b));
+    box.appendChild(b);
+  });
+  $('#next').addEventListener('click',()=>{ if(busy) return; if(post) Object.assign(st,post); if(cur<5){ goStep(cur+1); autoSay(STEPS[cur].q); } else finale(); });
+  renderWords(s.words); hud();
+}
+
+async function choose(o,btn){
+  if(busy||btn.disabled) return; busy=true;
+  const s=STEPS[cur], box=$('#opts'), all=[...box.querySelectorAll('.opt')], replay=!!done[cur];
+  all.forEach(b=>b.disabled=true); btn.classList.add('playing');
+  const nx=$('#next'); nx.disabled=true;
+  const fb=$('#fb'); fb.hidden=true; $('#hint').hidden=true;
+  if(canSpeak) try{speechSynthesis.cancel();}catch(e){}
+  WAVE.getAnimations().forEach(a=>a.cancel());
+  Object.assign(st,clone(pre));
+  Lfx.innerHTML=''; renderCastle(); if(s.setup) s.setup();
+  if(cur===0) ['A','B','C'].forEach(l=>{ const p=$('#pin'+l); if(p&&p.classList.contains('play')) pin(l,''); });
+  if(innerWidth<=880 && matchMedia('(orientation: portrait)').matches){ const r=$('.stage').getBoundingClientRect(); if(r.top<-10) window.scrollTo({top:scrollY+r.top-8,behavior:RM?'auto':'smooth'}); }
+  try{ await o.run(); }catch(e){ console.error(e); }
+  btn.classList.remove('playing');
+  if(cur===0&&o.pin) pin(o.pin,o.ok?'good':'bad');
+  stamp(o.ok);
+  fb.className='fb '+(o.ok?'good':'bad');
+  fb.innerHTML='<span class="mark">'+(o.ok?CHECK:CROSS)+'</span><div class="grow"><p>'+esc(o.fb)+'</p></div>'+sayBtn(o.fb);
+  fb.hidden=false;
+  if(o.ok){
+    btn.classList.add('right');
+    if(!replay){ done[cur]=true; first[cur]=wrongs===0; hud(); }
+    post=clone(st);
+    nx.hidden=false;
+  }else{
+    if(!replay) wrongs++;
+    btn.classList.add('wrong');
+  }
+  const h=$('#hint');
+  if(done[cur]){ all.forEach(b=>b.disabled=false); h.textContent='Tap any answer to watch it again.'; }
+  else { all.forEach(b=>{ if(!b.classList.contains('wrong')) b.disabled=false; }); h.textContent='Try another answer.'; }
+  h.hidden=false; nx.disabled=false;
+  autoSay(o.fb);
+  busy=false;
+  requestAnimationFrame(()=>{ const t=o.ok?nx:fb; const r=t.getBoundingClientRect(); if(r.bottom>innerHeight) t.scrollIntoView({block:'end',behavior:RM?'auto':'smooth'}); });
+}
+
+function finale(){
+  WAVE.getAnimations().forEach(a=>a.cancel()); Lfx.innerHTML=''; renderCastle();
+  cur=6; hud(); cap('Your sandcastle is ready!');
+  camera(CAM.final,1200); confetti(); sparkle(CX,GY-100,14,130);
+  const n=first.filter(Boolean).length;
+  panel.innerHTML='<div class="eyebrow">You did it!</div>'+
+   '<div><h2>Your sandcastle is ready!</h2></div>'+
+   '<p class="score">You got <b>'+n+' of 6</b> right on the first try.</p>'+
+   '<div class="recap"><div class="label">How to make a sandcastle</div><ol>'+
+   RECAP.map(r=>'<li><span class="t">'+esc(r[0])+'</span>'+sayBtn(r[0])+'</li>').join('')+'</ol></div>'+
+   (canSpeak?'<button class="next" id="readAll" type="button" style="background:var(--ink);box-shadow:0 6px 0 #0A1730">Listen to all steps</button>':'')+
+   '<button class="next" id="again" type="button">Play again</button>';
+  const all=STEPS.reduce((a,s)=>a.concat(s.words),[]);
+  renderWords(all);
+  const ra=$('#readAll'); if(ra) ra.addEventListener('click',()=>speak('How to make a sandcastle. '+RECAP.map((r,i)=>'Step '+(i+1)+'. '+r[0]).join(' ')));
+  $('#again').addEventListener('click',restart);
+  autoSay('Your sandcastle is ready!');
+  panel.scrollIntoView({block:'nearest',behavior:RM?'auto':'smooth'});
+}
+function restart(){ resetState(); done.length=0; first.length=0; goStep(0); window.scrollTo({top:0,behavior:RM?'auto':'smooth'}); }
+
+/* toggles */
+$('#voiceBtn').addEventListener('click',e=>{ voiceOn=!voiceOn; e.currentTarget.setAttribute('aria-pressed',voiceOn); e.currentTarget.textContent=voiceOn?'Voice on':'Voice off'; if(!voiceOn&&canSpeak) try{speechSynthesis.cancel();}catch(_){} });
+
+resetState(); goStep(0,true);
+})();
+</script>
+
+</body></html>
